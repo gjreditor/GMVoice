@@ -8,8 +8,10 @@
     "start": "node sendMorning.js"
   },
   "dependencies": {
-    "axios": "^1.7.5",
-    "form-data": "^4.0.0",
-    "fs": "0.0.1-security"
+  "@elevenlabs/elevenlabs-js": "^0.5.0",
+  "axios": "^1.7.5",
+  "form-data": "^4.0.0"
   }
 }
+
+
