@@ -25,11 +25,10 @@ async function generateTTS(text) {
       textInput: text,
       voiceId: 'EXAVITQu4vr4xnSDxMaL', // Default voice ID
       modelId: 'eleven_multilingual_v2',
-      stability: 0.5,
-      similarityBoost: 0.5,
+      voiceSettings: { stability: 0.5, similarityBoost: 0.5 }
     });
 
-    fs.writeFileSync('morning.mp3', audioBuffer);
+    fs.writeFileSync('morning.mp3', audioBuffer.audio);
     console.log('TTS saved as morning.mp3');
   } catch (error) {
     console.error('Error generating TTS:', error);
@@ -57,3 +56,4 @@ async function sendWhatsAppAudio() {
   await generateTTS(messageText);
   await sendWhatsAppAudio();
 })();
+
