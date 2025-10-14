@@ -8,9 +8,10 @@
     "start": "node sendMorning.js"
   },
   "dependencies": {
-    "elevenlabs": "^1.4.0",          // ✅ Correct package name
+    "elevenlabs": "^1.4.0",          
     "axios": "^1.7.5",
     "form-data": "^4.0.0",
-    "dotenv": "^16.4.5"              // ✅ Add this since you use dotenv.config()
+    "dotenv": "^16.4.5"             
   }
 }
+
