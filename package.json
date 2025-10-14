@@ -1,17 +1,15 @@
 {
   "name": "good-morning-bot",
   "version": "1.0.0",
-  "description": "Send Good Morning WhatsApp audio messages daily via Green API and ElevenLabs TTS",
+  "description": "Send Good Morning WhatsApp audio messages daily via Green API and ElevenLabs",
   "main": "sendMorning.js",
   "type": "module",
   "scripts": {
     "start": "node sendMorning.js"
   },
   "dependencies": {
-    "elevenlabs": "^1.4.0",          
     "axios": "^1.7.5",
     "form-data": "^4.0.0",
-    "dotenv": "^16.4.5"             
+    "elevenlabs": "^1.6.0"
   }
 }
-
