@@ -1,34 +1,29 @@
-import fs from "fs";
 import axios from "axios";
 import FormData from "form-data";
-import { ElevenLabsClient } from "elevenlabs"; // ✅ Correct import
-import * as dotenv from "dotenv";
+import { ElevenLabsClient } from "elevenlabs";
 
-dotenv.config();
-
-// --- CONFIGURATION ---
+// --- ENVIRONMENT VARIABLES ---
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const GREEN_API_INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID;
 const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN;
-const TO_PHONE_NUMBER = process.env.TO_PHONE_NUMBER; // Include country code (e.g. 91XXXXXXXXXX)
+const TO_PHONE_NUMBER = process.env.TO_PHONE_NUMBER; // e.g., "919876543210"
 
-// Initialize ElevenLabs client
+// --- CREATE ELEVENLABS CLIENT ---
 const elevenlabs = new ElevenLabsClient({
   apiKey: ELEVENLABS_API_KEY,
 });
 
-// Get current day name
+// --- DYNAMIC MESSAGE ---
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const today = new Date();
 const dayName = days[today.getDay()];
+const messageText = `Good morning and happy ${dayName}! 🌞`;
 
-const messageText = `Good Morning ${dayName}`;
-
-// 1️⃣ Generate TTS using ElevenLabs
 async function generateTTS(text) {
+  console.log("🎙️ Generating speech...");
   try {
-    const response = await elevenlabs.textToSpeech.convert(
-      "EXAVITQu4vr4xnSDxMaL", // ✅ Default voice ID
+    const audioBuffer = await elevenlabs.textToSpeech.convert(
+      "EXAVITQu4vr4xnSDxMaL",
       {
         text,
         model_id: "eleven_multilingual_v2",
@@ -37,51 +32,41 @@ async function generateTTS(text) {
       }
     );
 
-    const fileName = "morning.mp3";
-    const fileStream = fs.createWriteStream(fileName);
-    response.pipe(fileStream);
-
-    return new Promise((resolve, reject) => {
-      fileStream.on("finish", () => {
-        console.log("✅ TTS saved as morning.mp3");
-        resolve(fileName);
-      });
-      fileStream.on("error", reject);
-    });
+    console.log("✅ TTS generation successful.");
+    return Buffer.from(audioBuffer);
   } catch (error) {
     console.error("❌ Error generating TTS:", error.message || error);
     throw error;
   }
 }
 
-// 2️⃣ Send the MP3 to WhatsApp using Green API
-async function sendWhatsAppAudio(filePath) {
+async function sendWhatsAppAudio(buffer) {
+  console.log("📤 Sending via Green API...");
   try {
     const url = `https://api.green-api.com/waInstance${GREEN_API_INSTANCE_ID}/SendFileByUpload/${GREEN_API_TOKEN}`;
     const formData = new FormData();
-    formData.append("chatId", `${TO_PHONE_NUMBER}@c.us`);
-    formData.append("file", fs.createReadStream(filePath));
-    formData.append("filename", "morning.mp3");
-    formData.append("caption", messageText);
 
-    await axios.post(url, formData, { headers: formData.getHeaders() });
-    console.log("📤 Audio message sent via WhatsApp!");
+    formData.append("chatId", `${TO_PHONE_NUMBER}@c.us`);
+    formData.append("caption", messageText);
+    formData.append("file", buffer, { filename: "morning.mp3", contentType: "audio/mpeg" });
+
+    const response = await axios.post(url, formData, { headers: formData.getHeaders() });
+    if (response.data?.idMessage) {
+      console.log("✅ WhatsApp audio sent successfully!");
+    } else {
+      console.error("❌ WhatsApp send failed:", response.data);
+    }
   } catch (error) {
-    console.error("❌ Error sending WhatsApp message:", error.message || error);
-    throw error;
+    console.error("❌ Error sending WhatsApp audio:", error.message || error);
   }
 }
 
-// 3️⃣ Execute the workflow
 (async () => {
   try {
-    const filePath = await generateTTS(messageText);
-    await sendWhatsAppAudio(filePath);
-
-    // Cleanup
-    fs.unlinkSync(filePath);
-    console.log("🧹 Temporary file deleted.");
-  } catch (error) {
-    console.error("❌ Script failed:", error.message || error);
+    const buffer = await generateTTS(messageText);
+    await sendWhatsAppAudio(buffer);
+  } catch (err) {
+    console.error("❌ Script failed:", err.message || err);
+    process.exit(1);
   }
 })();
