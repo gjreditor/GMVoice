@@ -8,22 +8,30 @@ const GREEN_API_INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID;
 const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN;
 const TO_PHONE_NUMBER = process.env.TO_PHONE_NUMBER; // e.g., "919876543210"
 
-// --- CREATE ELEVENLABS CLIENT ---
+// --- INITIALIZE ELEVENLABS CLIENT ---
 const elevenlabs = new ElevenLabsClient({
   apiKey: ELEVENLABS_API_KEY,
 });
 
-// --- DYNAMIC MESSAGE ---
+// --- GREETING MESSAGE ---
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const today = new Date();
 const dayName = days[today.getDay()];
 const messageText = `Good morning and happy ${dayName}! 🌞`;
 
+async function streamToBuffer(stream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
 async function generateTTS(text) {
   console.log("🎙️ Generating speech...");
   try {
-    const audioBuffer = await elevenlabs.textToSpeech.convert(
-      "EXAVITQu4vr4xnSDxMaL",
+    const audioStream = await elevenlabs.textToSpeech.convert(
+      "EXAVITQu4vr4xnSDxMaL", // voice ID
       {
         text,
         model_id: "eleven_multilingual_v2",
@@ -32,8 +40,11 @@ async function generateTTS(text) {
       }
     );
 
+    // Convert ReadableStream → Buffer
+    const audioBuffer = await streamToBuffer(audioStream);
+
     console.log("✅ TTS generation successful.");
-    return Buffer.from(audioBuffer);
+    return audioBuffer;
   } catch (error) {
     console.error("❌ Error generating TTS:", error.message || error);
     throw error;
