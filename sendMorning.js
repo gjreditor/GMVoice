@@ -13,12 +13,13 @@ const elevenlabs = new ElevenLabsClient({
   apiKey: ELEVENLABS_API_KEY,
 });
 
-// --- GREETING MESSAGE ---
-const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// --- GREETING MESSAGE (Tamil) ---
+const days = ["ஞாயிறு", "திங்கள்", "செவ்வாய்", "புதன்", "வியாழன்", "வெள்ளி", "சனி"];
 const today = new Date();
 const dayName = days[today.getDay()];
-const messageText = `Good morning and happy ${dayName}! 🌞`;
+const messageText = `இனிய காலை வணக்கம்! இன்று ${dayName}! 🌞`;
 
+// --- Convert ReadableStream → Buffer ---
 async function streamToBuffer(stream) {
   const chunks = [];
   for await (const chunk of stream) {
@@ -28,25 +29,29 @@ async function streamToBuffer(stream) {
 }
 
 async function generateTTS(text) {
-  console.log("🎙️ Generating speech...");
+  console.log("🎙️ Generating Tamil speech...");
   try {
     const audioStream = await elevenlabs.textToSpeech.convert(
-      "EXAVITQu4vr4xnSDxMaL", // voice ID
+      // ✅ Use your Tamil-capable voice ID (replace below if you have one)
+      "C2RGMrNBTZaNfddRPeRH",
       {
         text,
         model_id: "eleven_multilingual_v2",
-        voice_settings: { stability: 0.5, similarity_boost: 0.5 },
+        voice_settings: {
+          stability: 0.8,           // More stable = slower, calmer
+          similarity_boost: 0.3,    // Lower = less fast, less expressive
+          style: 0.2,               // Subtle tone
+        },
         output_format: "mp3_44100_128",
       }
     );
 
-    // Convert ReadableStream → Buffer
     const audioBuffer = await streamToBuffer(audioStream);
 
-    console.log("✅ TTS generation successful.");
+    console.log("✅ Tamil TTS generation successful.");
     return audioBuffer;
   } catch (error) {
-    console.error("❌ Error generating TTS:", error.message || error);
+    console.error("❌ Error generating Tamil TTS:", error.message || error);
     throw error;
   }
 }
@@ -63,7 +68,7 @@ async function sendWhatsAppAudio(buffer) {
 
     const response = await axios.post(url, formData, { headers: formData.getHeaders() });
     if (response.data?.idMessage) {
-      console.log("✅ WhatsApp audio sent successfully!");
+      console.log("✅ WhatsApp Tamil audio sent successfully!");
     } else {
       console.error("❌ WhatsApp send failed:", response.data);
     }
