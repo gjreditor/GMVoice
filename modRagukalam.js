@@ -80,16 +80,20 @@ const rahuIndex = {
 
 async function getRahuKalamTamil() {
   const today = new Date();
-  const { sunrise, sunset } = await getSunTimes(today);
 
-  const part = (sunset - sunrise) / 8;
-  const idx = rahuIndex[sunrise.getDay()] - 1;
+  // Traditional Panchang assumption
+  const sunrise = new Date(today);
+  sunrise.setHours(6, 0, 0, 0); // 06:00 AM fixed
+
+  const part = 90 * 60 * 1000; // 1.5 hours in ms
+  const idx = rahuIndex[today.getDay()] - 1;
 
   const start = new Date(sunrise.getTime() + idx * part);
   const end = new Date(start.getTime() + part);
 
   return `இன்றைய ராகு காலம் ${fmt(start)} முதல் ${fmt(end)} வரை.`;
 }
+
 
 // ================= TTS =================
 async function streamToBuffer(stream) {
